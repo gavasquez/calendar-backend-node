@@ -1,16 +1,29 @@
 const { Router } = require( 'express' );
 const { validarJWT } = require( '../middlewares/validar-jwt' );
 const { getEventos, crearEvento, actualizarEvento, eliminarEvento } = require('../controllers/events');
-// Todas tiene que pasar por el JWT
+const { validarCampos } = require( '../middlewares/validar-campos' );
+const { check } = require( 'express-validator' );
+const { isDay } = require( '../helpers/isDate' );
+/* 
+  Rutas de Usuarios / Events
+  host + /api/events
+*/
+
 const router = Router();
+// todas las peticiones pasan por el validardJWT
+router.use(validarJWT);
 
-// Obtener eventos
-router.get('/',validarJWT, getEventos); // Obtener eventos
+router.get('/', getEventos); // Obtener eventos
 
-router.post('/', validarJWT, crearEvento); // Crear eventos
+router.post('/', [
+  check('title', 'El titulo es obligatorio').not().isEmpty(),
+  check('start', 'La fecha inicial es obligatoria').custom( isDay ),
+  check('end', 'La fecha final es obligatoria').custom( isDay ),
+  validarCampos, // validar campos
+], crearEvento); // Crear eventos
 
-router.put('/:id', validarJWT, actualizarEvento); // Actualizar eventos
+router.put('/:id', actualizarEvento); // Actualizar eventos
 
-router.delete('/:id', validarJWT, eliminarEvento); // Eliminar eventos
+router.delete('/:id', eliminarEvento); // Eliminar eventos
 
 module.exports = router;
